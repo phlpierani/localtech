@@ -1,11 +1,16 @@
 package com.pierai.locatech.locatech.services;
 
 import com.pierai.locatech.locatech.entities.Aluguel;
+import com.pierai.locatech.locatech.entities.AluguelRequest;
 import com.pierai.locatech.locatech.entities.Pessoa;
+import com.pierai.locatech.locatech.exception.ResourceNotFoundException;
 import com.pierai.locatech.locatech.repository.AluguelRepository;
+import com.pierai.locatech.locatech.repository.PessoaRepository;
+import com.pierai.locatech.locatech.repository.VeiculoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,9 +19,12 @@ public class AluguelService {
 
     private final AluguelRepository aluguelRepository;
 
-    public AluguelService(AluguelRepository aluguelRepository) {
+    private final VeiculoRepository veiculoRepository;
+
+    public AluguelService(AluguelRepository aluguelRepository, VeiculoRepository veiculoRepository) {
         this.aluguelRepository = aluguelRepository;
-     }
+        this.veiculoRepository = veiculoRepository;
+    }
 
     public List<Aluguel> findAllAlugueis(int page, int size) {
         int offset = (page - 1) * size;
@@ -24,12 +32,13 @@ public class AluguelService {
     }
 
     public Optional<Aluguel> findAluguelById(Long id) {
-        return this.aluguelRepository.findById(id);
+        return Optional.of(this.aluguelRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Aluguel não encontrado com id: " + id)));
     }
 
-    public void saveAluguel(Aluguel aluguel) {
-        var save = this.aluguelRepository.save(aluguel);
-        Assert.state(save == 1, "Erro ao salvar o Aluguel" + aluguel.getPessoaId());
+    public void saveAluguel(AluguelRequest aluguel) {
+        var aluguelEntity = calcularValorAluguel(aluguel);
+        var save = this.aluguelRepository.save(aluguelEntity);
+        Assert.state(save == 1, "Erro ao salvar o Aluguel" + aluguel.pessoaId());
     }
 
     public void updateAluguel(Aluguel aluguel,
@@ -45,5 +54,15 @@ public class AluguelService {
         if (delete == 0) {
             throw new RuntimeException("Aluguel não encontrado para deleção");
         }
+    }
+
+    private Aluguel calcularValorAluguel(AluguelRequest AluguelRequest) {
+        var veiculo = this.veiculoRepository.findById(AluguelRequest.veiculoId())
+                .orElseThrow(() -> new RuntimeException("Veículo não encontrado para aluguel"));
+
+        var quantidadesDias = BigDecimal.valueOf(AluguelRequest.dataFim().getDayOfYear() - AluguelRequest.dataInicio().getDayOfYear());
+        var valor = veiculo.getValorDiaria().multiply(quantidadesDias);
+
+        return new Aluguel(AluguelRequest, valor);
     }
 }

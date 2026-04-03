@@ -1,9 +1,11 @@
 package com.pierai.locatech.locatech.controllers;
 
 import com.pierai.locatech.locatech.entities.Aluguel;
+import com.pierai.locatech.locatech.entities.AluguelRequest;
 import com.pierai.locatech.locatech.entities.Pessoa;
 import com.pierai.locatech.locatech.services.AluguelService;
 import com.pierai.locatech.locatech.services.PessoaService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +50,7 @@ public class AluguelController {
 
     @PostMapping
     public ResponseEntity<Void> saveAluguel(
-            @RequestBody Aluguel aluguel)
+            @RequestBody @Valid AluguelRequest aluguel)
     {
         LOGGER.info("Recebendo requisição para salvar veículo: {}", aluguel);
         this.aluguelService.saveAluguel(aluguel);

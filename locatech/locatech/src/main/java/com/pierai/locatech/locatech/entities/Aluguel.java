@@ -23,4 +23,12 @@ public class Aluguel {
     private String pessoaNome;
     private BigDecimal valorTotal;
 
+    public Aluguel(AluguelRequest aluguelRequest, BigDecimal valorTotal) {
+        this.pessoaId = aluguelRequest.pessoaId();
+        this.veiculoId = aluguelRequest.veiculoId();
+        this.dataInicio = aluguelRequest.dataInicio();
+        this.dataFim = aluguelRequest.dataFim();
+        this.valorTotal = valorTotal;
+    }
+
 }
